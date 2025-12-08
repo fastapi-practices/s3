@@ -83,7 +83,7 @@ async def update_s3_storage(
 
 @router.delete(
     '',
-    summary='批量删除 sssS3 存储',
+    summary='批量删除 S3 存储',
     dependencies=[
         Depends(RequestPermission('s3:storage:del')),
         DependsRBAC,
