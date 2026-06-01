@@ -6,6 +6,7 @@ from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.plugin.s3.model import S3Storage
 from backend.plugin.s3.schema.storage import CreateS3StorageParam, UpdateS3StorageParam
+from backend.utils.timezone import timezone
 
 
 class CRUDS3Storage(CRUDPlus[S3Storage]):
@@ -17,7 +18,7 @@ class CRUDS3Storage(CRUDPlus[S3Storage]):
         :param pk: S3 存储 ID
         :return:
         """
-        return await self.select_model(db, pk)
+        return await self.select_model(db, pk, deleted=0)
 
     async def get_select(self, name: str | None, region: str | None) -> Select:
         """
@@ -27,7 +28,7 @@ class CRUDS3Storage(CRUDPlus[S3Storage]):
         :param region: 区域
         :return:
         """
-        filters = {}
+        filters = {'deleted': 0}
 
         if name is not None:
             filters['name__like'] = f'%{name}%'
@@ -43,7 +44,7 @@ class CRUDS3Storage(CRUDPlus[S3Storage]):
         :param db: 数据库会话
         :return:
         """
-        return await self.select_models(db)
+        return await self.select_models(db, deleted=0)
 
     async def create(self, db: AsyncSession, obj: CreateS3StorageParam) -> None:
         """
@@ -64,7 +65,7 @@ class CRUDS3Storage(CRUDPlus[S3Storage]):
         :param obj: 更新 S3 存储参数
         :return:
         """
-        return await self.update_model(db, pk, obj)
+        return await self.update_model_by_column(db, obj, id=pk, deleted=0)
 
     async def delete(self, db: AsyncSession, pks: list[int]) -> int:
         """
@@ -74,7 +75,17 @@ class CRUDS3Storage(CRUDPlus[S3Storage]):
         :param pks: S3 存储 ID 列表
         :return:
         """
-        return await self.delete_model_by_column(db, allow_multiple=True, id__in=pks)
+        return await self.delete_model_by_column(
+            db,
+            allow_multiple=True,
+            logical_deletion=True,
+            deleted_flag_column='deleted',
+            deleted_flag_value=self.model.id,
+            deleted_at_column='deleted_time',
+            deleted_at_factory=timezone.now(),
+            id__in=pks,
+            deleted=0,
+        )
 
 
 s3_storage_dao: CRUDS3Storage = CRUDS3Storage(S3Storage)

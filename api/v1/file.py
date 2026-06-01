@@ -39,5 +39,4 @@ async def upload_s3_files(
     else:
         root = bucket_path
 
-    url = f'{root.rstrip("/")}/{file.filename}'
-    return response_base.success(data={'url': url})
+    return response_base.success(data=UploadUrl(url=f'{root.rstrip("/")}/{file.filename}'))

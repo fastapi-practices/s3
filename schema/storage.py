@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, field_serializer
 
 from backend.common.schema import SchemaBase
 
@@ -40,3 +40,7 @@ class GetS3StorageDetail(S3StorageSchemaBase):
     id: int = Field(description='S3 存储 ID')
     created_time: datetime = Field(description='创建时间')
     updated_time: datetime | None = Field(None, description='更新时间')
+
+    @field_serializer('access_key', 'secret_key')
+    def serialize_secret(self, value: str) -> str | None:
+        return f'{value[:4]}****{value[-4:]}'
