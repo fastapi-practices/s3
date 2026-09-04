@@ -1,25 +1,27 @@
-from anyio import Path, open_file
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.common.exception import errors
-from backend.core.path_conf import UPLOAD_DIR
 from backend.plugin.s3.crud.crud_storage import s3_storage_dao
+from backend.plugin.s3.model import S3Storage
 from backend.plugin.s3.utils.file_ops import delete_object, get_bytes, normalize_object_key, put_bytes
 
 
-def _local_path(key: str) -> Path:
+async def _require_default_storage(*, db: AsyncSession) -> S3Storage:
     """
-    获取本地回退路径
+    获取默认 S3 存储
 
-    :param key: 对象键
+    :param db: 数据库会话
     :return:
     """
-    return Path(UPLOAD_DIR / normalize_object_key(key))
+    storage = await s3_storage_dao.get_default(db)
+    if not storage:
+        raise errors.RequestError(msg='未配置默认 S3 存储')
+    return storage
 
 
 async def write_text(*, db: AsyncSession, key: str, content: str) -> str:
     """
-    写入文本对象，未配置默认存储时回退本地目录
+    写入文本对象
 
     :param db: 数据库会话
     :param key: 对象键
@@ -27,33 +29,20 @@ async def write_text(*, db: AsyncSession, key: str, content: str) -> str:
     :return:
     """
     object_key = normalize_object_key(key)
-    data = content.encode()
-    storage = await s3_storage_dao.get_default(db)
-    if storage is None:
-        path = _local_path(object_key)
-        await path.parent.mkdir(parents=True, exist_ok=True)
-        async with await open_file(path, 'wb') as fb:
-            await fb.write(data)
-        return object_key
-    return await put_bytes(storage, object_key, data)
+    storage = await _require_default_storage(db=db)
+    return await put_bytes(storage, object_key, content.encode())
 
 
 async def read_text(*, db: AsyncSession, key: str) -> str:
     """
-    读取文本对象，未配置默认存储时回退本地目录
+    读取文本对象
 
     :param db: 数据库会话
     :param key: 对象键
     :return:
     """
     object_key = normalize_object_key(key)
-    storage = await s3_storage_dao.get_default(db)
-    if storage is None:
-        path = _local_path(object_key)
-        if not await path.is_file():
-            raise errors.NotFoundError(msg='对象不存在')
-        async with await open_file(path, 'rb') as fb:
-            return (await fb.read()).decode()
+    storage = await _require_default_storage(db=db)
     try:
         return (await get_bytes(storage, object_key)).decode()
     except Exception:
@@ -62,25 +51,20 @@ async def read_text(*, db: AsyncSession, key: str) -> str:
 
 async def delete_text(*, db: AsyncSession, key: str) -> None:
     """
-    删除文本对象，未配置默认存储时回退本地目录
+    删除文本对象
 
     :param db: 数据库会话
     :param key: 对象键
     :return:
     """
     object_key = normalize_object_key(key)
-    storage = await s3_storage_dao.get_default(db)
-    if storage is None:
-        path = _local_path(object_key)
-        if await path.is_file():
-            await path.unlink()
-        return
+    storage = await _require_default_storage(db=db)
     await delete_object(storage, object_key)
 
 
 async def load_text(*, db: AsyncSession, object_key: str | None, fallback: str = '') -> str:
     """
-    按对象键读取正文，没有对象键时返回回退内容
+    按对象键读取正文，没有对象键或对象不存在时返回回退内容
 
     :param db: 数据库会话
     :param object_key: 对象键
