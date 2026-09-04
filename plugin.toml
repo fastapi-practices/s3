@@ -1,10 +1,14 @@
 [plugin]
-summary = 'S3'
-version = '0.0.2'
-description = '提供兼容 S3 协议的对象存储能力'
-author = 'wu-clan'
-tags = ['storage']
-database = ['mysql', 'postgresql']
+icon = "https://wu-clan.github.io/picx-images-hosting/logo/fba.svg"
+summary = "S3"
+version = "0.0.2"
+description = "提供兼容 S3 协议的对象存储配置与文件读写能力"
+author = "wu-clan"
+tags = ["storage"]
+database = ["mysql", "postgresql"]
 
 [app]
-router = ['v1']
+router = ["v1"]
+
+[settings]
+S3_UPLOAD_SIZE_MAX = 20971520

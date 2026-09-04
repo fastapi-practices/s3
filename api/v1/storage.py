@@ -1,8 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path
-from fastapi.params import Query
+from fastapi import APIRouter, Depends, Path, Query
 
+from backend.common.enums import StatusType
 from backend.common.pagination import DependsPagination, PageData
 from backend.common.response.response_schema import ResponseModel, ResponseSchemaModel, response_base
 from backend.common.security.jwt import DependsJwtAuth
@@ -15,22 +15,14 @@ from backend.plugin.s3.schema.storage import (
     GetS3StorageDetail,
     UpdateS3StorageParam,
 )
-from backend.plugin.s3.service.storage import s3_storage_service
+from backend.plugin.s3.service.storage_service import s3_storage_service
 
 router = APIRouter()
 
 
-@router.get('/all', summary='获取所有 S3 存储详情', dependencies=[DependsJwtAuth])
+@router.get('/all', summary='获取所有 S3 存储', dependencies=[DependsJwtAuth])
 async def get_all_s3_storages(db: CurrentSession) -> ResponseSchemaModel[list[GetS3StorageDetail]]:
-    s3_storage = await s3_storage_service.get_all(db=db)
-    return response_base.success(data=s3_storage)
-
-
-@router.get('/{pk}', summary='获取 S3 存储详情', dependencies=[DependsJwtAuth])
-async def get_s3_storage(
-    db: CurrentSession, pk: Annotated[int, Path(description='S3 存储 ID')]
-) -> ResponseSchemaModel[GetS3StorageDetail]:
-    s3_storage = await s3_storage_service.get(db=db, pk=pk)
+    s3_storage = await s3_storage_service.get_all(db=db, status=StatusType.enable.value)
     return response_base.success(data=s3_storage)
 
 
@@ -46,9 +38,19 @@ async def get_s3_storages_paginated(
     db: CurrentSession,
     name: Annotated[str | None, Query(description='存储名称')] = None,
     region: Annotated[str | None, Query(description='区域')] = None,
+    status: Annotated[int | None, Query(description='状态')] = None,
 ) -> ResponseSchemaModel[PageData[GetS3StorageDetail]]:
-    page_data = await s3_storage_service.get_list(db=db, name=name, region=region)
+    page_data = await s3_storage_service.get_list(db=db, name=name, region=region, status=status)
     return response_base.success(data=page_data)
+
+
+@router.get('/{pk}', summary='获取 S3 存储详情', dependencies=[DependsJwtAuth])
+async def get_s3_storage(
+    db: CurrentSession,
+    pk: Annotated[int, Path(description='S3 存储 ID')],
+) -> ResponseSchemaModel[GetS3StorageDetail]:
+    s3_storage = await s3_storage_service.get(db=db, pk=pk)
+    return response_base.success(data=s3_storage)
 
 
 @router.post(
@@ -73,12 +75,30 @@ async def create_s3_storage(db: CurrentSessionTransaction, obj: CreateS3StorageP
     ],
 )
 async def update_s3_storage(
-    db: CurrentSessionTransaction, pk: Annotated[int, Path(description='S3 存储 ID')], obj: UpdateS3StorageParam
+    db: CurrentSessionTransaction,
+    pk: Annotated[int, Path(description='S3 存储 ID')],
+    obj: UpdateS3StorageParam,
 ) -> ResponseModel:
     count = await s3_storage_service.update(db=db, pk=pk, obj=obj)
     if count > 0:
         return response_base.success()
     return response_base.fail()
+
+
+@router.post(
+    '/{pk}/check',
+    summary='检查 S3 存储连接',
+    dependencies=[
+        Depends(RequestPermission('s3:storage:edit')),
+        DependsRBAC,
+    ],
+)
+async def check_s3_storage(
+    db: CurrentSession,
+    pk: Annotated[int, Path(description='S3 存储 ID')],
+) -> ResponseModel:
+    await s3_storage_service.check(db=db, pk=pk)
+    return response_base.success()
 
 
 @router.delete(
