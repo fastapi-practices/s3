@@ -1,5 +1,5 @@
 insert into sys_menu (id, title, name, path, sort, icon, type, component, perms, status, display, cache, link, remark, parent_id, created_time, updated_time)
-values (2147651050637758464, 's3.menu', 'PluginS3', '/plugins/s3', 10, 'mdi:cloud-upload-outline', 1, '/plugins/s3/views/index', null, 1, 1, 1, '', null, 2049629108245233667, now(), null);
+values (2147651050637758464, 's3.menu', 'PluginS3', '/plugins/s3', 10, 'mdi:cloud-upload-outline', 1, '/plugins/s3/views/index', null, 1, 1, 1, '', null, null, now(), null);
 
 insert into sys_menu (id, title, name, path, sort, icon, type, component, perms, status, display, cache, link, remark, parent_id, created_time, updated_time)
 values
