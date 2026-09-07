@@ -14,11 +14,11 @@ class S3StorageSchemaBase(SchemaBase):
     access_key: str = Field(description='访问密钥')
     secret_key: str = Field(description='密钥')
     bucket: str = Field(description='存储桶')
-    prefix: str | None = Field(default=None, description='前缀')
-    region: str | None = Field(default=None, description='区域')
+    prefix: str | None = Field(None, description='前缀')
+    region: str | None = Field(None, description='区域')
     status: StatusType = Field(default=StatusType.enable, description='状态')
     is_default: bool = Field(default=False, description='是否默认')
-    remark: str | None = Field(default=None, description='备注')
+    remark: str | None = Field(None, description='备注')
 
 
 class CreateS3StorageParam(S3StorageSchemaBase):
@@ -30,14 +30,14 @@ class UpdateS3StorageParam(SchemaBase):
 
     name: str = Field(description='存储名称')
     endpoint: str = Field(description='终端节点')
-    access_key: str | None = Field(default=None, description='访问密钥，不传则保持原值')
-    secret_key: str | None = Field(default=None, description='密钥，不传则保持原值')
+    access_key: str | None = Field(None, description='访问密钥，不传则保持原值')
+    secret_key: str | None = Field(None, description='密钥，不传则保持原值')
     bucket: str = Field(description='存储桶')
-    prefix: str | None = Field(default=None, description='前缀')
-    region: str | None = Field(default=None, description='区域')
+    prefix: str | None = Field(None, description='前缀')
+    region: str | None = Field(None, description='区域')
     status: StatusType = Field(description='状态')
     is_default: bool = Field(description='是否默认')
-    remark: str | None = Field(default=None, description='备注')
+    remark: str | None = Field(None, description='备注')
 
 
 class DeleteS3StorageParam(SchemaBase):
@@ -53,7 +53,7 @@ class GetS3StorageDetail(S3StorageSchemaBase):
 
     id: int = Field(description='S3 存储 ID')
     created_time: datetime = Field(description='创建时间')
-    updated_time: datetime | None = Field(default=None, description='更新时间')
+    updated_time: datetime | None = Field(None, description='更新时间')
 
     @field_serializer('access_key', 'secret_key')
     def serialize_secret(self, value: str) -> str:

@@ -7,7 +7,7 @@ from backend.common.model import Base, UniversalText, id_key
 
 
 class S3Storage(Base):
-    """S3 存储"""
+    """S3 存储表"""
 
     __tablename__ = 's3_storage'
 

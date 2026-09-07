@@ -88,6 +88,18 @@ async def delete_object(s3_storage: S3Storage, key: str) -> None:
     await get_operator(s3_storage).delete(object_key)
 
 
+async def remove_prefix(s3_storage: S3Storage, prefix: str) -> None:
+    """
+    递归删除前缀下的全部对象
+
+    :param s3_storage: S3 存储
+    :param prefix: 对象前缀
+    :return:
+    """
+    object_prefix = normalize_object_key(prefix)
+    await get_operator(s3_storage).remove_all(object_prefix)
+
+
 async def object_exists(s3_storage: S3Storage, key: str) -> bool:
     """
     判断对象是否存在
