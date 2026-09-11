@@ -11,27 +11,26 @@ from backend.plugin.s3.utils.file_ops import delete_object, get_bytes, put_bytes
 from backend.utils.file_ops import build_filename
 
 
-async def _resolve_storage(*, db: AsyncSession, storage_id: int | None) -> S3Storage:
-    """
-    解析可用的 S3 存储，未指定时使用默认存储
-
-    :param db: 数据库会话
-    :param storage_id: S3 存储 ID
-    :return:
-    """
-    if storage_id is None:
-        return await s3_storage_service.get_default(db=db)
-    s3_storage = await s3_storage_service.get(db=db, pk=storage_id)
-    if s3_storage.status != StatusType.enable.value:
-        raise errors.RequestError(msg='S3 存储已停用')
-    return s3_storage
-
-
 class S3FileService:
     """S3 文件服务类"""
 
     @staticmethod
-    async def upload(*, db: AsyncSession, storage_id: int, file: UploadFile) -> GetS3ObjectDetail:
+    async def _resolve_storage(*, db: AsyncSession, storage_id: int | None) -> S3Storage:
+        """
+        解析可用的 S3 存储，未指定时使用默认存储
+
+        :param db: 数据库会话
+        :param storage_id: S3 存储 ID
+        :return:
+        """
+        if storage_id is None:
+            return await s3_storage_service.get_default(db=db)
+        s3_storage = await s3_storage_service.get(db=db, pk=storage_id)
+        if s3_storage.status != StatusType.enable.value:
+            raise errors.RequestError(msg='S3 存储已停用')
+        return s3_storage
+
+    async def upload(self, *, db: AsyncSession, storage_id: int, file: UploadFile) -> GetS3ObjectDetail:
         """
         上传文件到指定 S3 存储
 
@@ -48,12 +47,12 @@ class S3FileService:
         if not contents:
             raise errors.RequestError(msg='文件内容不能为空')
 
-        s3_storage = await _resolve_storage(db=db, storage_id=storage_id)
+        s3_storage = await self._resolve_storage(db=db, storage_id=storage_id)
         key = await put_bytes(s3_storage, f'uploads/{build_filename(file)}', contents)
         return GetS3ObjectDetail(storage_id=s3_storage.id, key=key)
 
-    @staticmethod
     async def put_bytes(
+        self,
         *,
         db: AsyncSession,
         key: str,
@@ -69,12 +68,11 @@ class S3FileService:
         :param storage_id: S3 存储 ID
         :return:
         """
-        s3_storage = await _resolve_storage(db=db, storage_id=storage_id)
+        s3_storage = await self._resolve_storage(db=db, storage_id=storage_id)
         object_key = await put_bytes(s3_storage, key, data)
         return GetS3ObjectDetail(storage_id=s3_storage.id, key=object_key)
 
-    @staticmethod
-    async def get_bytes(*, db: AsyncSession, key: str, storage_id: int | None = None) -> bytes:
+    async def get_bytes(self, *, db: AsyncSession, key: str, storage_id: int | None = None) -> bytes:
         """
         读取对象，未指定存储时使用默认存储
 
@@ -83,14 +81,13 @@ class S3FileService:
         :param storage_id: S3 存储 ID
         :return:
         """
-        s3_storage = await _resolve_storage(db=db, storage_id=storage_id)
+        s3_storage = await self._resolve_storage(db=db, storage_id=storage_id)
         try:
             return await get_bytes(s3_storage, key)
         except Exception:
             raise errors.NotFoundError(msg='对象不存在')
 
-    @staticmethod
-    async def delete(*, db: AsyncSession, key: str, storage_id: int | None = None) -> None:
+    async def delete(self, *, db: AsyncSession, key: str, storage_id: int | None = None) -> None:
         """
         删除对象，未指定存储时使用默认存储
 
@@ -99,7 +96,7 @@ class S3FileService:
         :param storage_id: S3 存储 ID
         :return:
         """
-        s3_storage = await _resolve_storage(db=db, storage_id=storage_id)
+        s3_storage = await self._resolve_storage(db=db, storage_id=storage_id)
         await delete_object(s3_storage, key)
 
 
