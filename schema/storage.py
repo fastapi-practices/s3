@@ -6,6 +6,14 @@ from backend.common.enums import StatusType
 from backend.common.schema import SchemaBase
 
 
+class S3StorageQueryParam(SchemaBase):
+    """S3 存储查询参数"""
+
+    name: str | None = Field(None, description='存储名称')
+    region: str | None = Field(None, description='区域')
+    status: int | None = Field(None, description='状态')
+
+
 class S3StorageSchemaBase(SchemaBase):
     """S3 存储基础模型"""
 

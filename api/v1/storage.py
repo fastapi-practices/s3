@@ -13,6 +13,7 @@ from backend.plugin.s3.schema.storage import (
     CreateS3StorageParam,
     DeleteS3StorageParam,
     GetS3StorageDetail,
+    S3StorageQueryParam,
     UpdateS3StorageParam,
 )
 from backend.plugin.s3.service.storage_service import s3_storage_service
@@ -36,11 +37,14 @@ async def get_all_s3_storages(db: CurrentSession) -> ResponseSchemaModel[list[Ge
 )
 async def get_s3_storages_paginated(
     db: CurrentSession,
-    name: Annotated[str | None, Query(description='存储名称')] = None,
-    region: Annotated[str | None, Query(description='区域')] = None,
-    status: Annotated[int | None, Query(description='状态')] = None,
+    query: Annotated[S3StorageQueryParam, Query()],
 ) -> ResponseSchemaModel[PageData[GetS3StorageDetail]]:
-    page_data = await s3_storage_service.get_list(db=db, name=name, region=region, status=status)
+    page_data = await s3_storage_service.get_list(
+        db=db,
+        name=query.name,
+        region=query.region,
+        status=query.status,
+    )
     return response_base.success(data=page_data)
 
 
