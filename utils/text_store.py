@@ -66,8 +66,8 @@ async def read_text(*, db: AsyncSession, key: str, storage_id: int | None = None
     storage = await require_storage(db=db, storage_id=storage_id)
     try:
         return (await get_bytes(storage, object_key)).decode()
-    except Exception:
-        raise errors.NotFoundError(msg='对象不存在')
+    except Exception as exc:
+        raise errors.NotFoundError(msg='对象不存在') from exc
 
 
 async def delete_text(*, db: AsyncSession, key: str, storage_id: int | None = None) -> None:
