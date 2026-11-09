@@ -9,7 +9,7 @@ class S3FileUploadQueryParam(SchemaBase):
     storage: int = Field(description='S3 存储 ID')
 
 
-class GetS3ObjectDetail(SchemaBase):
+class GetS3FileDetail(SchemaBase):
     """S3 对象详情"""
 
     storage_id: int = Field(description='S3 存储 ID')

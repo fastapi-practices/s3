@@ -15,7 +15,8 @@ from backend.plugin.s3.utils.file_ops import check_storage, is_masked_secret
 class S3StorageService:
     """S3 存储服务类"""
 
-    async def get_all(self, *, db: AsyncSession, status: int | None = None) -> Sequence[S3Storage]:
+    @staticmethod
+    async def get_all(*, db: AsyncSession, status: int | None = None) -> Sequence[S3Storage]:
         """
         获取所有 S3 存储
 
@@ -25,7 +26,8 @@ class S3StorageService:
         """
         return await s3_storage_dao.get_all(db, status=status)
 
-    async def get(self, *, db: AsyncSession, pk: int) -> S3Storage:
+    @staticmethod
+    async def get(*, db: AsyncSession, pk: int) -> S3Storage:
         """
         获取 S3 存储
 
@@ -38,7 +40,8 @@ class S3StorageService:
             raise errors.NotFoundError(msg='S3 存储不存在')
         return s3_storage
 
-    async def get_default(self, *, db: AsyncSession) -> S3Storage:
+    @staticmethod
+    async def get_default(*, db: AsyncSession) -> S3Storage:
         """
         获取默认 S3 存储
 
@@ -50,8 +53,8 @@ class S3StorageService:
             raise errors.NotFoundError(msg='未配置默认 S3 存储')
         return s3_storage
 
+    @staticmethod
     async def get_list(
-        self,
         *,
         db: AsyncSession,
         name: str | None,
@@ -70,7 +73,8 @@ class S3StorageService:
         s3_storage_select = await s3_storage_dao.get_select(name, region, status)
         return await paging_data(db, s3_storage_select)
 
-    async def create(self, *, db: AsyncSession, obj: CreateS3StorageParam) -> None:
+    @staticmethod
+    async def create(*, db: AsyncSession, obj: CreateS3StorageParam) -> None:
         """
         创建 S3 存储
 
@@ -156,7 +160,8 @@ class S3StorageService:
             await s3_storage_dao.clear_default(db)
         return await s3_storage_dao.update(db, pk, payload)
 
-    async def delete(self, *, db: AsyncSession, obj: DeleteS3StorageParam) -> int:
+    @staticmethod
+    async def delete(*, db: AsyncSession, obj: DeleteS3StorageParam) -> int:
         """
         删除 S3 存储
 

@@ -100,18 +100,6 @@ async def remove_prefix(s3_storage: S3Storage, prefix: str) -> None:
     await get_operator(s3_storage).remove_all(object_prefix)
 
 
-async def object_exists(s3_storage: S3Storage, key: str) -> bool:
-    """
-    判断对象是否存在
-
-    :param s3_storage: S3 存储
-    :param key: 对象键
-    :return:
-    """
-    object_key = normalize_object_key(key)
-    return bool(await get_operator(s3_storage).exists(object_key))
-
-
 async def check_storage(s3_storage: S3Storage) -> None:
     """
     检查 S3 存储是否可用

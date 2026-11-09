@@ -5,7 +5,7 @@ from backend.common.enums import StatusType
 from backend.common.exception import errors
 from backend.core.conf import settings
 from backend.plugin.s3.model import S3Storage
-from backend.plugin.s3.schema.file import GetS3ObjectDetail
+from backend.plugin.s3.schema.file import GetS3FileDetail
 from backend.plugin.s3.service.storage_service import s3_storage_service
 from backend.plugin.s3.utils.file_ops import delete_object, get_bytes, put_bytes
 from backend.utils.file_ops import build_filename
@@ -30,7 +30,7 @@ class S3FileService:
             raise errors.RequestError(msg='S3 存储已停用')
         return s3_storage
 
-    async def upload(self, *, db: AsyncSession, storage_id: int, file: UploadFile) -> GetS3ObjectDetail:
+    async def upload(self, *, db: AsyncSession, storage_id: int, file: UploadFile) -> GetS3FileDetail:
         """
         上传文件到指定 S3 存储
 
@@ -49,7 +49,7 @@ class S3FileService:
 
         s3_storage = await self._resolve_storage(db=db, storage_id=storage_id)
         key = await put_bytes(s3_storage, f'uploads/{build_filename(file)}', contents)
-        return GetS3ObjectDetail(storage_id=s3_storage.id, key=key)
+        return GetS3FileDetail(storage_id=s3_storage.id, key=key)
 
     async def put_bytes(
         self,
@@ -58,7 +58,7 @@ class S3FileService:
         key: str,
         data: bytes,
         storage_id: int | None = None,
-    ) -> GetS3ObjectDetail:
+    ) -> GetS3FileDetail:
         """
         写入对象，未指定存储时使用默认存储
 
@@ -70,7 +70,7 @@ class S3FileService:
         """
         s3_storage = await self._resolve_storage(db=db, storage_id=storage_id)
         object_key = await put_bytes(s3_storage, key, data)
-        return GetS3ObjectDetail(storage_id=s3_storage.id, key=object_key)
+        return GetS3FileDetail(storage_id=s3_storage.id, key=object_key)
 
     async def get_bytes(self, *, db: AsyncSession, key: str, storage_id: int | None = None) -> bytes:
         """
