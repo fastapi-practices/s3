@@ -3,7 +3,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.common.enums import StatusType
-from backend.common.model import Base, UniversalText, id_key
+from backend.common.model import Base, id_key
 
 
 class S3Storage(Base):
@@ -21,4 +21,4 @@ class S3Storage(Base):
     region: Mapped[str | None] = mapped_column(sa.String(64), default=None, comment='区域')
     status: Mapped[int] = mapped_column(default=StatusType.enable.value, comment='状态')
     is_default: Mapped[bool] = mapped_column(default=False, index=True, comment='是否默认')
-    remark: Mapped[str | None] = mapped_column(UniversalText, default=None, comment='备注')
+    remark: Mapped[str | None] = mapped_column(sa.Text, default=None, comment='备注')

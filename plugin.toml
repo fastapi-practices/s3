@@ -6,7 +6,6 @@ fba_version = "~=1.17"
 description = "提供兼容 S3 协议的对象存储配置与文件读写能力"
 author = "wu-clan"
 tags = ["storage"]
-database = ["mysql", "postgresql"]
 
 [app]
 router = ["v1"]
